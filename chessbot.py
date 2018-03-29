@@ -1,6 +1,6 @@
 import discord
 import asyncio
-from chess import chessfield
+from chessboard import ChessBoard
 client = discord.Client()
 chessGame = None
 
@@ -33,17 +33,13 @@ async def on_message(message: discord.message.Message):
     if message.content.startswith("!chess start"):
         startmsg = await client.send_message(message.channel, "Starting a new chess game.")
         global chessGame
-        chessGame = chessfield()
-        chessGame.init_white()
-        chessGame.init_black()
-        await client.edit_message(startmsg, "{}\n{}".format(startmsg.content, chessGame.board_as_unicode()))
+        chessGame = ChessBoard()
+        await client.edit_message(startmsg, "{}\n{}".format(startmsg.content, chessGame.show_board()))
 
     if message.content.startswith("!chess move") and chessGame is not None:
         origin, destination = parse_move_commands(message.content)
         print("moving from {} to {}".format(origin, destination))
-        piece = chessGame.piece_as_unicode(chessGame.move(origin, destination))
-        await client.send_message(message.channel, "Moving {} from {} to {}. \n"
-                                                   "New Board: \n{}"
-                                  .format(piece, origin, destination, chessGame.board_as_unicode()))
+        msg = chessGame.move(origin, destination)
+        await client.send_message(message.channel, msg)
 
 client.run(token)
