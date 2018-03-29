@@ -50,7 +50,7 @@ class ChessBoard(object):
             raise InvalidMoveException
 
         piece = self.board[origin]
-        return "Moved {} fom {} to {}".format(unicodeMappings[piece], origin, destination)
+        return "Moved {} fom {} to {}".format(unicodeMappings[piece], origin.as_chess_notation(), destination.as_chess_notation())
 
 
     def is_occupied(self, pos:C, colour):

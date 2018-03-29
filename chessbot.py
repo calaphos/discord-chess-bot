@@ -1,6 +1,6 @@
 import discord
-import asyncio
-from chessboard import ChessBoard
+from coordinates import C
+from chessboard import ChessBoard, InvalidMoveException
 client = discord.Client()
 chessGame = None
 
@@ -14,7 +14,7 @@ async def on_ready():
     print(client.user.id)
     print('------')
 
-def parse_move_commands(msg):
+def parse_move_commands(msg:str) -> (C,C):
     msg = msg.replace("!chess move", "", 1)
     print("move commands: {}".format(msg))
     if len(msg.split()) != 2:
@@ -24,8 +24,7 @@ def parse_move_commands(msg):
         raise Exception("Invalid Origin Coordinates")
     if destination[0] not in "abcdefgh" or destination[1] not in "12345678":
         raise Exception("Invalid Destination Coordinates")
-
-    return ((ord(origin[0])-97, int(origin[1])-1), (ord(destination[0])-97, int(destination[1])-1))
+    return C(ord(origin[0])-97, int(origin[1])-1), C(ord(destination[0])-97, int(destination[1])-1)
 
 
 @client.event
@@ -37,9 +36,15 @@ async def on_message(message: discord.message.Message):
         await client.edit_message(startmsg, "{}\n{}".format(startmsg.content, chessGame.show_board()))
 
     if message.content.startswith("!chess move") and chessGame is not None:
-        origin, destination = parse_move_commands(message.content)
-        print("moving from {} to {}".format(origin, destination))
-        msg = chessGame.move(origin, destination)
+        try:
+            origin, destination = parse_move_commands(message.content)
+            print("moving from {} to {}".format(origin, destination))
+            msg = chessGame.move(origin, destination)
+        except InvalidMoveException:
+            msg = "You cant move that piece there"
+        except:
+            msg = "Invalid command. Usage: !chess move origin destination where origin and destination" \
+                  " are in chess notation. E.g. a1"
         await client.send_message(message.channel, msg)
 
 client.run(token)
