@@ -25,6 +25,12 @@ class Coordinate():
         elif item==1: return self.y
         else: raise ValueError()
 
+    def __hash__(self):
+        return hash((self.x, self.y))
+
+    def __eq__(self, other):
+        return (self.x, self.y) == (other.x, other.y)
+
     def as_chess_notation(self):
         return chr(self.x + 97), self.y + 1
 
