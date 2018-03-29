@@ -1,4 +1,4 @@
-from coordinates import C
+from coordinates import Coordinate as C, Direction as D
 from itertools import product
 standard_positions = {C(2, 7): b'bishop_b', C(4, 7): b'king_b', C(2, 6): b'pawn_b', C(3, 6): b'pawn_b', C(6, 6): b'pawn_b',
                       C(3, 0): b'queen_w', C(7, 1): b'pawn_w', C(6, 0): b'knight_w', C(2, 1): b'pawn_w', C(7, 7): b'rook_b',
@@ -65,6 +65,30 @@ class ChessBoard(object):
         piece = self.board[origin]
         return piece_movement_mappings[piece](self, origin, destination)
 
+
+    def valid_moves_in_direction(self, orig: C, d_vec:D)->[C]:
+        """returns how far pieces can move into a direction, before encountering another piece"""
+        colour = self.board[orig][-2:]
+        valid = []
+        for d in range(-7,8):
+            try:
+                pos = orig + d_vec * d
+            except ValueError:
+                # out of board.
+                break
+
+            if pos not in self.board:
+                # empty position, move along
+                valid.append(pos)
+            elif self.board[pos][-2:] == colour:
+                # own piece, cant move further
+                break
+            else:
+                # enemy piece
+                valid.append(pos)
+                break
+
+
     def valid_king_move(self, origin, destination):
         movemets = [C(*i) for i in product(range(-1,2), range(-1,2))]
         movemets.remove(C(0,0))  # cant stay on the same position
@@ -75,12 +99,71 @@ class ChessBoard(object):
         else: return False
 
     def valid_queen_movement(self, origin, destination):
-        # TODO: Here it gets harder
+        valid_directions = [i for i in product(range(-1,2), range(-1,2))]
+        valid_directions.remove((0,0))
+
+        valid_pos = []
+        for direction in valid_directions:
+            valid_pos.append(self.valid_moves_in_direction(origin, D(*direction)))
+
+        if destination in valid_pos: return True
+        else: return False
+
+    def valid_rook_movement(self, origin, destination):
+        valid_directions = [(1,0), (0,1), (-1,0), (0,-1)]
+        valid_pos = []
+        for direction in valid_directions:
+            valid_pos.append(self.valid_moves_in_direction(origin, D(*direction)))
+
+        if destination in valid_pos: return True
+        else: return False
+
+    def valid_bishop_movement(self, origin, destination):
+        valid_directions = [(1,1), (-1,1), (-1,-1), (1,-1)]
+        valid_pos = []
+        for direction in valid_directions:
+            valid_pos.append(self.valid_moves_in_direction(origin, D(*direction)))
+
+        if destination in valid_pos: return True
+        else: return False
+
+    def valid_knight_movement(self, origin, destination):
+        relative = [(2,-1), (2,1), (1,-2), (1,2), (-2,-1), (-2,1), (-1,2), (-1,-2)]
+        absolut = []
+        for e in relative:
+            try:
+                absolut.append(origin + e)
+            except ValueError:
+                pass
+
+        for pos in absolut:
+            if pos not in self.board:
+                return True
+            if self.board[pos][-2:] != self.board[origin][-2:]:
+                return True
+            else:
+                return False
+
+    def valid_pawn_movement_b(self, origin, destination):
         pass
 
 
+
+
+
+
 piece_movement_mappings = {
-    b"king_w": ChessBoard.valid_king_move
+    b"king_w": ChessBoard.valid_king_move,
+    b"kind_b":ChessBoard.valid_king_move,
+    b"quen_w":ChessBoard.valid_queen_movement,
+    b"queen_b":ChessBoard.valid_queen_movement,
+    b"rook_w": ChessBoard.valid_rook_movement,
+    b"rook_b": ChessBoard.valid_rook_movement,
+    b"bishop_w": ChessBoard.valid_bishop_movement,
+    b"bishop_b": ChessBoard.valid_bishop_movement,
+    b"knight_w": ChessBoard.valid_knight_movement,
+    b"knight_b": ChessBoard.valid_knight_movement,
+
 }
 
 

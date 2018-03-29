@@ -1,5 +1,5 @@
 import discord
-from coordinates import C
+from coordinates import Coordinate as C
 from chessboard import ChessBoard, InvalidMoveException
 client = discord.Client()
 chessGame = None
