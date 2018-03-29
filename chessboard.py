@@ -53,8 +53,14 @@ class ChessBoard(object):
         return "Moved {} fom {} to {}".format(unicodeMappings[piece], origin.as_chess_notation(), destination.as_chess_notation())
 
 
-    def is_occupied(self, pos:C, colour):
-        if self.board[pos][-2:] == colour:
+    def is_occupied(self, pos:C, colour=None):
+        """returns if the position in question is occupied with the colour"""
+        # TODO: Ugly as fuck.
+        if pos not in self.board:
+            return False
+        elif colour is not None and self.board[pos] == colour:
+            return True
+        elif colour is None and pos in self.board:
             return True
         else:
             return False
@@ -130,6 +136,7 @@ class ChessBoard(object):
     def valid_knight_movement(self, origin, destination):
         relative = [(2,-1), (2,1), (1,-2), (1,2), (-2,-1), (-2,1), (-1,2), (-1,-2)]
         absolut = []
+        valid = []
         for e in relative:
             try:
                 absolut.append(origin + e)
@@ -138,14 +145,62 @@ class ChessBoard(object):
 
         for pos in absolut:
             if pos not in self.board:
-                return True
+                valid.append(pos)
             if self.board[pos][-2:] != self.board[origin][-2:]:
-                return True
-            else:
-                return False
+                valid.append(pos)
+        if destination in valid:
+            return True
+        else: return False
 
     def valid_pawn_movement_b(self, origin, destination):
-        pass
+        has_moved = origin[1] != 2
+        valid = []
+
+        # TODO: position checks will crash with unchecked exceptions if out of board. fix
+        if not has_moved:
+            # can move one, two or diagonally on enemy piece
+            if not self.is_occupied(origin+C(0,1)):
+                valid.append(origin+C(0,1))
+                if not self.is_occupied(origin+C(0,2)):
+                    valid.append(origin+C(0,2))
+
+        if self.is_occupied(origin+C(1,1), b"_w"):
+            valid.append(origin+C(1,1))
+        if self.is_occupied(origin+C(-1,1), b"_w"):
+            valid.append(origin+C(-1,1))
+        if self.is_occupied(origin+C(1,2), b"_w"):
+            valid.append(origin+C(1,2))
+        if self.is_occupied(origin+C(-1,2), b"_w"):
+            valid.append(origin+C(-1,2))
+
+        if destination in valid:
+            return True
+        else: return False
+
+    def valid_pawn_movement_w(self, origin, destination):
+        has_moved = origin[1] != 6
+        valid = []
+        if not has_moved:
+            # can move one, two or diagonally on enemy piece
+            if not self.is_occupied(origin + C(0, -1)):
+                valid.append(origin + C(0, -1))
+                if not self.is_occupied(origin + C(0, -2)):
+                    valid.append(origin + C(0, 2))
+
+        if self.is_occupied(origin + C(1, -1), b"_b"):
+            valid.append(origin + C(1, -1))
+        if self.is_occupied(origin + C(-1, -1), b"_b"):
+            valid.append(origin + C(-1, -1))
+        if self.is_occupied(origin + C(1, -2), b"_b"):
+            valid.append(origin + C(1, -2))
+        if self.is_occupied(origin + C(-1, -2), b"_b"):
+            valid.append(origin + C(-1, -2))
+
+        if destination in valid:
+            return True
+        else:
+            return False
+
 
 
 
@@ -163,7 +218,8 @@ piece_movement_mappings = {
     b"bishop_b": ChessBoard.valid_bishop_movement,
     b"knight_w": ChessBoard.valid_knight_movement,
     b"knight_b": ChessBoard.valid_knight_movement,
-
+    b"pawn_w": ChessBoard.valid_pawn_movement_w,
+    b"pawn_b": ChessBoard.valid_pawn_movement_b
 }
 
 
