@@ -38,13 +38,14 @@ async def on_message(message: discord.message.Message):
     if message.content.startswith("!chess move") and chessGame is not None:
         try:
             origin, destination = parse_move_commands(message.content)
-            print("moving from {} to {}".format(origin, destination))
-            msg = chessGame.move(origin, destination)
+            msg = chessGame.move(origin, destination) + "\n" + chessGame.show_board()
         except InvalidMoveException:
             msg = "You cant move that piece there"
-        except:
+        except Exception:
             msg = "Invalid command. Usage: !chess move origin destination where origin and destination" \
                   " are in chess notation. E.g. a1"
         await client.send_message(message.channel, msg)
+    if message.content.startswith("!chess show"):
+        await client.send_message(message.channel, chessGame.show_board())
 
 client.run(token)

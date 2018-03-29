@@ -33,16 +33,16 @@ class ChessBoard(object):
         self.board = standard_positions
 
     def show_board(self):
-        board = ""
+        board = "```"
         for x in range(8):
             for y in range(8):
-                if C(x,y) in self.board:
-                    board += unicodeMappings[self.board[C(x,y)]]
+                if C(y,x) in self.board:
+                    board += unicodeMappings[self.board[C(y,x)]]
                 else:
                     board += " "
             board += "\n"
 
-        return board
+        return board + "```"
 
     def move(self, origin: C, destination: C) -> str:
         """moves a piece form origin to destination. Does validiy checks. Returns a nicely formatted string message"""
@@ -50,6 +50,9 @@ class ChessBoard(object):
             raise InvalidMoveException
 
         piece = self.board[origin]
+        print("moving from {} to {}".format(origin, destination))
+        self.board.pop(origin)
+        self.board[destination] = piece
         return "Moved {} fom {} to {}".format(unicodeMappings[piece], origin.as_chess_notation(), destination.as_chess_notation())
 
 
@@ -69,6 +72,7 @@ class ChessBoard(object):
     def is_valid_move(self, origin, destination):
         if origin not in self.board: return False
         piece = self.board[origin]
+        print("checking move for {} on {}".format(piece, origin))
         return piece_movement_mappings[piece](self, origin, destination)
 
 
@@ -93,6 +97,7 @@ class ChessBoard(object):
                 # enemy piece
                 valid.append(pos)
                 break
+        return valid
 
 
     def valid_king_move(self, origin, destination):
@@ -112,7 +117,9 @@ class ChessBoard(object):
         for direction in valid_directions:
             valid_pos.append(self.valid_moves_in_direction(origin, D(*direction)))
 
-        if destination in valid_pos: return True
+        val_pos_flat = [item for sublist in valid_pos for item in sublist]
+
+        if destination in val_pos_flat: return True
         else: return False
 
     def valid_rook_movement(self, origin, destination):
@@ -121,7 +128,10 @@ class ChessBoard(object):
         for direction in valid_directions:
             valid_pos.append(self.valid_moves_in_direction(origin, D(*direction)))
 
-        if destination in valid_pos: return True
+        pass
+        val_pos_flat = [item for sublist in valid_pos for item in sublist]
+
+        if destination in val_pos_flat: return True
         else: return False
 
     def valid_bishop_movement(self, origin, destination):
@@ -130,7 +140,9 @@ class ChessBoard(object):
         for direction in valid_directions:
             valid_pos.append(self.valid_moves_in_direction(origin, D(*direction)))
 
-        if destination in valid_pos: return True
+        val_pos_flat = [item for sublist in valid_pos for item in sublist]
+
+        if destination in val_pos_flat: return True
         else: return False
 
     def valid_knight_movement(self, origin, destination):
@@ -152,57 +164,77 @@ class ChessBoard(object):
             return True
         else: return False
 
-    def valid_pawn_movement_b(self, origin, destination):
-        has_moved = origin[1] != 2
+    def valid_pawn_movement_w(self, origin, destination):
+        has_moved = origin[1] != 1
         valid = []
 
-        # TODO: position checks will crash with unchecked exceptions if out of board. fix
+        # TODO: The Error Handling is an inconsistent piece of shit
         if not has_moved:
             # can move one, two or diagonally on enemy piece
-            if not self.is_occupied(origin+C(0,1)):
-                valid.append(origin+C(0,1))
-                if not self.is_occupied(origin+C(0,2)):
-                    valid.append(origin+C(0,2))
+            try:
+                if not self.is_occupied(origin+C(0,1)):
+                    valid.append(origin+C(0,1))
+                    if not self.is_occupied(origin+C(0,2)):
+                        valid.append(origin+C(0,2))
+            except:
+                pass  # point ouside board, not viable
+        try:
+            if self.is_occupied(origin+C(1,1), b"_b"):
+                valid.append(origin+C(1,1))
+        except: pass #point ouside board, not viable
+        try:
+            if self.is_occupied(origin+C(-1,1), b"_b"):
+                valid.append(origin+C(-1,1))
+        except: pass  # point ouside board, not viable
+        try:
+            if self.is_occupied(origin+C(1,2), b"_b"):
+                valid.append(origin+C(1,2))
+        except: pass  # point ouside board, not viable
+        try:
+            if self.is_occupied(origin+C(-1,2), b"_b"):
+                valid.append(origin+C(-1,2))
+        except: pass #point ouside board, not viable
 
-        if self.is_occupied(origin+C(1,1), b"_w"):
-            valid.append(origin+C(1,1))
-        if self.is_occupied(origin+C(-1,1), b"_w"):
-            valid.append(origin+C(-1,1))
-        if self.is_occupied(origin+C(1,2), b"_w"):
-            valid.append(origin+C(1,2))
-        if self.is_occupied(origin+C(-1,2), b"_w"):
-            valid.append(origin+C(-1,2))
+
 
         if destination in valid:
             return True
         else: return False
 
-    def valid_pawn_movement_w(self, origin, destination):
+    def valid_pawn_movement_b(self, origin, destination):
+        # TODO: The Error Handling is an inconsistent piece of shit
         has_moved = origin[1] != 6
         valid = []
         if not has_moved:
             # can move one, two or diagonally on enemy piece
-            if not self.is_occupied(origin + C(0, -1)):
-                valid.append(origin + C(0, -1))
-                if not self.is_occupied(origin + C(0, -2)):
-                    valid.append(origin + C(0, 2))
+            try:
+                if not self.is_occupied(origin + C(0, -1)):
+                    valid.append(origin + C(0, -1))
+                    if not self.is_occupied(origin + C(0, -2)):
+                        valid.append(origin + C(0, -2))
+            except: pass #point ouside board, not viable
 
-        if self.is_occupied(origin + C(1, -1), b"_b"):
-            valid.append(origin + C(1, -1))
-        if self.is_occupied(origin + C(-1, -1), b"_b"):
-            valid.append(origin + C(-1, -1))
-        if self.is_occupied(origin + C(1, -2), b"_b"):
-            valid.append(origin + C(1, -2))
-        if self.is_occupied(origin + C(-1, -2), b"_b"):
-            valid.append(origin + C(-1, -2))
+        try:
+            if self.is_occupied(origin + C(1, -1), b"_w"):
+                valid.append(origin + C(1, -1))
+        except: pass #point ouside board, not viable
+        try:
+            if self.is_occupied(origin + C(-1, -1), b"_w"):
+                valid.append(origin + C(-1, -1))
+        except: pass #point ouside board, not viable
+        try:
+            if self.is_occupied(origin + C(1, -2), b"_w"):
+                valid.append(origin + C(1, -2))
+        except: pass #point ouside board, not viable
+        try:
+            if self.is_occupied(origin + C(-1, -2), b"_w"):
+                valid.append(origin + C(-1, -2))
+        except: pass #point ouside board, not viable
 
         if destination in valid:
             return True
         else:
             return False
-
-
-
 
 
 

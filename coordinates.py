@@ -9,18 +9,19 @@ class Coordinate():
         self.x, self.y = args
 
         if self.x not in range(8) or self.y not in range(8):
+            print("coorindates {} {} are out of board".format(self.x, self.y))
             raise ValueError()
 
     def __add__(self, other):
-        return C(self.x + other.x, self.y + other.y)
+        return Coordinate(self.x + other.x, self.y + other.y)
 
     def __sub__(self, other):
-        return C(self.x - other.x, self.y - other.y)
+        return Coordinate(self.x - other.x, self.y - other.y)
 
     def __mul__(self, other:int):
-        return C(self.x * other, self.y * other)
+        return Coordinate(self.x * other, self.y * other)
 
-    def __getattr__(self, item):
+    def __getitem__(self, item):
         if item == 0: return self.x
         elif item==1: return self.y
         else: raise ValueError()
